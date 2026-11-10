@@ -37,6 +37,21 @@ namespace Firehouse.EditorTools
         }
 
         /// <summary>
+        /// Before a builder replaces the open scene: asks to save only if a saved scene has unsaved edits.
+        /// Untitled scratch scenes are discarded silently. Returns false if the user cancels.
+        /// </summary>
+        public static bool ConfirmSaveOpenScenes()
+        {
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            {
+                var s = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (s.isDirty && !string.IsNullOrEmpty(s.path))
+                    return UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Creates the folder on disk (never through the MCP asset tool) and imports it.
         /// </summary>
         public static void EnsureFolder(string assetPath)

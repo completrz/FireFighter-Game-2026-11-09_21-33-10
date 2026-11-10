@@ -14,8 +14,6 @@ namespace Firehouse.Core
 
         private Vector2 _scroll;
         private Rect _window = new Rect(16, 16, 380, 560);
-        private CursorLockMode _prevLock;
-        private bool _prevVisible;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Create()
@@ -35,21 +33,15 @@ namespace Firehouse.Core
 
         private void SetOpen(bool open)
         {
-            if (open == IsOpen) return;
             IsOpen = open;
-            if (open)
-            {
-                _prevLock = Cursor.lockState;
-                _prevVisible = Cursor.visible;
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
-            else
-            {
-                Cursor.lockState = _prevLock;
-                Cursor.visible = _prevVisible;
-            }
+            UIFocus.SetOpen(this, open);
         }
+
+        // The panel exists in every scene, so it also applies the cursor state each frame.
+        private void LateUpdate() => UIFocus.ApplyCursor();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => IsOpen = false;
 
         private void OnGUI()
         {

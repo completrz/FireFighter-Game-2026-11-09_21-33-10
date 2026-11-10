@@ -48,8 +48,9 @@ Assets/_Project/
     EditMode/
     PlayMode/
   Data/           ScriptableObject assets (FireMaterials, Agents, TruckStats, Upgrades, Levels, Tuning)
-  Prefabs/
-  Scenes/         Bootstrap, Firehouse, TestRoad, TestFire
+  Prefabs/        P_Player, …
+  Resources/      NetworkRoot.prefab only (see "Startup" below)
+  Scenes/         Firehouse (build index 0), later TestRoad, TestFire
   Art/
     Materials/    the shared vertex-color material lives here
     Shaders/
@@ -76,6 +77,28 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 - Every repeatable setup (test scenes, prefabs, the Smokies model, the shared material) has an editor builder under the **`Tools/Firehouse/`** menu, so it can be rebuilt in one click. Generated assets can be regenerated, so don't hand-edit them.
 - Art: primitives, ProBuilder and procedural meshes, colored with vertex colors through the one shared material `Art/Materials/M_VertexColor`.
 
+## Startup and sessions
+
+- `NetworkRootBoot` (runs before the first scene) instantiates `Resources/NetworkRoot.prefab`. That prefab holds the NetworkManager, both transports (UnityTransport for Local, `FacepunchTransport` for Steam), `SteamService`, `SteamLobbyService`, `SessionManager` and the prototype `MainMenu`. It is DontDestroyOnLoad, so **you can press Play in any scene**. Never put a NetworkManager in a scene.
+- `SessionManager` is the only API for starting and stopping: `HostLocal`, `JoinLocal(ip)`, `HostSteam`, `JoinByCode`, `JoinSteamLobby`, `Leave`. The host then loads the "gameplay scene", which is the scene that was open at startup unless `_gameplayScene` is set.
+- Players are **not** auto-spawned by NGO. Each scene has a `PlayerSpawner` (host only) that spawns `SessionManager.PlayerPrefab` at that scene's `SpawnPoint`s, with `destroyWithScene: true`.
+- `SteamService` owns Steam's Init, RunCallbacks and Shutdown; the transport never shuts Steam down. Steam is skipped in Multiplayer Play Mode clones.
+- Steam lobbies on App 480 are tagged with `firehouse_coop=proto1`. Bump `SteamLobbyService.ProtocolVersion` when builds stop being network-compatible.
+- Input focus: menus and panels call `UIFocus.SetOpen`. Gameplay checks `UIFocus.IsBlocked`, and the local player sets `UIFocus.GameplayWantsCursorLock`.
+
+## Generated content (Tools/Firehouse menu)
+
+| Menu item | Makes |
+| --- | --- |
+| Build/Rebuild Everything | All of the items below, in order |
+| Setup/Create Shared Material | `Art/Materials/M_VertexColor.mat` (shader `Firehouse/FlatVertexColor`) |
+| Build/Player Prefab | `Prefabs/P_Player.prefab` and registers it in `Data/NetworkPrefabs.asset` |
+| Build/Network Root | `Resources/NetworkRoot.prefab` |
+| Build/Firehouse Blockout Scene | `Scenes/Firehouse.unity` and sets it as build index 0 |
+| Build/Art Test Scene | An unsaved scratch scene with shader test shapes |
+
+Shader vertex colors: RGB is the albedo, and **alpha < 1 means emissive** (0 = full glow). `_GlowColor` (set by MaterialPropertyBlock) adds script-driven glow, and `_BaseColor` (set by MaterialPropertyBlock) tints, e.g. coat color.
+
 ## Networking rules (authority)
 
 | Thing | Owner |
@@ -91,15 +114,17 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 
 ## How to run a 2-player test
 
-**Same machine (local transport, the fastest loop):**
-1. Open `Window > Multiplayer > Multiplayer Play Mode` and enable Player 2 (if that package is installed; otherwise use a second build).
-2. Enter Play Mode. In the main editor's menu, choose **Transport: Local** → **Host**.
-3. In the Player 2 window, choose **Transport: Local** → **Join** `127.0.0.1`.
+**Same machine (Local transport, Multiplayer Play Mode, the fastest loop):**
+1. Open `Window > Multiplayer > Multiplayer Play Mode` and tick **Player 2**. The first time, wait for the clone to finish importing.
+2. Open `Assets/_Project/Scenes/Firehouse.unity` and press Play.
+3. Main editor: **Host local**. Player 2 window: **Join IP** with `127.0.0.1`.
+4. Esc opens the in-game menu (Leave), and F1 opens the debug panel (network status).
 
 **Steam (real lobbies, invites and voice):** this needs two PCs with **two different Steam accounts**, both with Steam running.
-1. `Tools/Firehouse/Build/Windows Dev Build` (or File > Build). `steam_appid.txt` (480) must sit next to the exe.
-2. PC A: run the build → **Host** → **Invite Friends** (Steam overlay, Shift+Tab), or read out the 6-letter code.
-3. PC B: accept the invite, or type the code into **Join with code**.
+1. File > Build Profiles > Windows > Build into `Builds/` (git-ignored). Copy `steam_appid.txt` (contains `480`) next to the exe.
+2. PC A: run the build (or press Play in the editor) → **Host (Steam lobby)** → Esc → **Invite friends**, or read out the 6-letter code.
+3. PC B: accept the invite in Steam, or type the code → **Join with code**.
+Steam shows the game as "Spacewar" while we're on App ID 480. That's expected.
 
 ## Workflow
 
@@ -110,4 +135,7 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 
 ## Status
 
-Milestone 1 (prototype) is in progress: Steam lobby, Smokies controller, proximity voice, starter truck, hose, basic fire grid. These are **not** built yet, but the code should be structured so they slot in later: radio dispatch, economy, levels, rescues, other fire types, intermission calls, the ladder truck.
+Milestone 1 (prototype) is in progress: Steam lobby, Smokies controller, proximity voice, starter truck, hose, basic fire grid.
+- Done: step 0 (setup), step 1 (Steam/local session, lobby + join codes, firehouse blockout, placeholder player).
+- Next: step 2, the Smokies character (replaces `SimplePlayerMotor` and the placeholder mesh in P_Player).
+- Branch: `prototype`. These are **not** built yet, but the code should be structured so they slot in later: radio dispatch, economy, levels, rescues, other fire types, intermission calls, the ladder truck.

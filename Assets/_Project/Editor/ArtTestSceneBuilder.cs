@@ -18,6 +18,7 @@ namespace Firehouse.EditorTools
         [MenuItem("Tools/Firehouse/Build/Art Test Scene")]
         public static void Build()
         {
+            if (!ProjectAssets.ConfirmSaveOpenScenes()) return;
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var mat = ProjectAssets.SharedMaterial;
 
