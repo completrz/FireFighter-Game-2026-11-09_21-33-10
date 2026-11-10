@@ -132,6 +132,7 @@ namespace Firehouse.EditorTools
             NetworkPrefabsBuilder.SetField(controller, "_headPivot", head);
 
             root.AddComponent<PlayerGrabber>();
+            root.AddComponent<PlayerInteractor>();
 
             var face = root.AddComponent<SmokieFace>();
             NetworkPrefabsBuilder.SetField(face, "_eyes", eyes.GetComponent<MeshFilter>());
