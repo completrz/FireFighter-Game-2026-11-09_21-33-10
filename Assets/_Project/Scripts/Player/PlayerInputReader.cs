@@ -11,7 +11,9 @@ namespace Firehouse.Player
     public sealed class PlayerInputReader : IDisposable
     {
         public readonly InputActionMap Map = new("Player");
-        public readonly InputAction Move, Look, Jump, Sprint, Grab, Throw, Interact;
+        public readonly InputAction Move, Look, Jump, Sprint, Grab, Throw, Interact, PushToTalk;
+        // Driving
+        public readonly InputAction Horn, Siren, Lights, Flip;
 
         public PlayerInputReader()
         {
@@ -39,6 +41,19 @@ namespace Firehouse.Player
 
             Interact = Map.AddAction("Interact", InputActionType.Button, "<Keyboard>/e");
             Interact.AddBinding("<Gamepad>/buttonWest");
+
+            PushToTalk = Map.AddAction("PushToTalk", InputActionType.Button, "<Keyboard>/v");
+            PushToTalk.AddBinding("<Gamepad>/leftShoulder");
+
+            Horn = Map.AddAction("Horn", InputActionType.Button, "<Keyboard>/h");
+            Horn.AddBinding("<Mouse>/leftButton");
+            Horn.AddBinding("<Gamepad>/buttonNorth");
+            Siren = Map.AddAction("Siren", InputActionType.Button, "<Keyboard>/f");
+            Siren.AddBinding("<Gamepad>/dpad/up");
+            Lights = Map.AddAction("Lights", InputActionType.Button, "<Keyboard>/l");
+            Lights.AddBinding("<Gamepad>/dpad/down");
+            Flip = Map.AddAction("Flip", InputActionType.Button, "<Keyboard>/r");
+            Flip.AddBinding("<Gamepad>/select");
 
             Map.Enable();
         }

@@ -8,5 +8,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Firehouse.unity
     guid: e5a0464427f67f64f88d5b52b0efc3d8
+  - enabled: 1
+    path: Assets/_Project/Scenes/TestRoad.unity
+    guid: 5c24c6d8256d599499c23e2e15d6173d
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

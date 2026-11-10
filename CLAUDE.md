@@ -41,7 +41,8 @@ Assets/_Project/
     Rescue/       (later) civilians
     Radio/        (later) dispatcher, speakers, call tickets
     Economy/      (later) paycheck, crew fund, shop, upgrades
-    Audio/        proximity voice, 3D audio helpers
+    Audio/        proximity voice, procedural placeholder sounds
+    World/        procedural terrain/road generation, level helpers
     UI/           menus, join-code entry, debug panel UI
   Editor/         editor-only scripts: Tools/Firehouse/* menu items, scene/prefab builders
   Tests/
@@ -94,7 +95,9 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 | Setup/Create Shared Material | `Art/Materials/M_VertexColor.mat` (shader `Firehouse/FlatVertexColor`) |
 | Setup/Physics Layers | Layer names and the collision matrix from `Firehouse.Core.Layers` |
 | Build/Player Prefab (Smokie) | Smokie meshes, `Prefabs/P_Player.prefab` and `Data/PlayerStats.asset`, and registers it in `Data/NetworkPrefabs.asset` |
-| Build/Props | `Prefabs/Props/*` carryables (crate, big crate, ball, cone, rescue dummy) |
+| Build/Props | `Prefabs/Props/*` carryables (crate, big crate, ball, cone, rescue dummy, mailbox) |
+| Build/Truck (Starter) | `Prefabs/P_Truck_Starter.prefab` and `Data/TruckStats_Starter.asset` |
+| Build/Test Road Scene | `Scenes/TestRoad.unity`: procedural terrain and road, bridge, mailboxes, fences, the truck and spawns |
 | Build/Network Root | `Resources/NetworkRoot.prefab` |
 | Build/Firehouse Blockout Scene | `Scenes/Firehouse.unity` and sets it as build index 0 |
 | Build/Art Test Scene | An unsaved scratch scene with shader test shapes |
@@ -110,6 +113,29 @@ Shader vertex colors: RGB is the albedo, and **alpha < 1 means emissive** (0 = f
 - **Cosmetics:** `SmokieArms` (local-only jointed floppy arms, detached into world space at runtime) and `SmokieFace` (swaps the eye mesh: normal, wide or X).
 - Everything tunable lives in `Data/PlayerStats.asset` and shows up in the F1 panel.
 - Controls: WASD, mouse, Shift sprint, Space jump, LMB hold to grab, RMB throw, E interact (reserved). Gamepad is bound too.
+
+## Trucks
+
+- `TruckController`: arcade raycast suspension. Each wheel does a spring/damper, sideways grip capped by load × friction, and drive/brake/rolling resistance. **Only the owner simulates it:** the host while parked, the driver while driving. Others see it through an owner-authority NetworkTransform plus NetworkRigidbody.
+- The driver's controls (throttle, steer, horn, siren, lights) are owner-write NetworkVariables. `TruckEffects` (every client, local only) handles wheel placement and spin, procedural horn/siren/engine sounds (`Audio/ProceduralAudio`), and the lightbar flash.
+- `TruckSeats`: the host owns the occupancy list (`NetworkList<ulong>`). Seat 0 is the driver, and taking it calls `HandOwnership(driver)`, which keeps the truck's motion. Leaving gives it back to the host. Seat kinds: Driver, Cab, BackStep (exposed: back step and hose bed).
+- **Seated players:** `SmokieState.Seated`. Every client places a seated player on their seat in `LateUpdate` (looked up from `TruckSeats`, so it needs no extra sync). The collider is off while seated, and you can look ±150° around while seated.
+- **Comedy** (on the simulating client): hard jolts or crashes throw back-step riders off (`TruckSeats.Eject`, then the host frees the seat and knocks the player back). Driving into players knocks them over, using an overlap check, because the truck ignores collisions with remote (kinematic) players. The truck also claims nearby loose `Grabbable`s so it bashes them aside.
+- `TruckController.AutoDrive` (throttle, steer) is a test hook used by tools and tests instead of player input.
+- Driving controls: WASD, Space handbrake (also an automatic parking brake when idle), H or LMB horn, F siren, L lights, R flip upright (when slow and upside down), E get in/out.
+- `PlayerInteractor` and the `Interactable` base class: E uses whatever you're looking at (seats now, the pump panel next).
+
+## World
+
+- `ProceduralTerrain` (`[ExecuteAlways]`) generates hills, a Catmull-Rom dirt road with potholes, washboard, jump humps and a cattle grate, and a creek. **It is deterministic, and every client generates it locally** (the mesh is never saved). Builders use `SampleHeight`, `RoadPointAt` and `CreekCrossingDistance` to place things.
+
+## Proximity voice
+
+- `SmokieVoice` (on the player): the owner captures audio and sends packets with `[Rpc(SendTo.NotMe, Delivery = Unreliable)]`. Receivers decode them into that Smokie's head `VoicePlayback`, a 3D AudioSource with a streaming clip, a jitter buffer, linear falloff, and a low-pass plus volume drop when a wall (Default layer) blocks the line to the listener.
+- **Codecs** (first byte of each packet): `Steam` (SteamUser record/compress) in Steam sessions, and `MuLaw12k` (Unity Microphone at 12 kHz μ-law, 50 ms packets) in Local sessions, so the voice works in MPPM clones without Steam. Everything plays back at 24 kHz.
+- The talk grille glows from the speaking level (`_GlowColor` set by MaterialPropertyBlock).
+- `Data/VoiceSettings.asset` (F1): open mic or push-to-talk (V / LB), mic gain, voice activation level, min/max distance, occlusion, jitter buffer, and **Loopback** (hear yourself; single-PC test).
+- Later: a radio upgrade (whole-crew channel) can reuse `VoiceRpc` with a 2D playback source.
 
 ## Networking rules (authority)
 
@@ -149,5 +175,7 @@ Steam shows the game as "Spacewar" while we're on App ID 480. That's expected.
 
 Milestone 1 (prototype) is in progress: Steam lobby, Smokies controller, proximity voice, starter truck, hose, basic fire grid.
 - Done: step 0 (setup), step 1 (Steam/local session, lobby + join codes, firehouse blockout), step 2 (Smokies controller, arms, ladders/pole, grab and carry, props).
-- Next: step 3, proximity voice (Steam voice → 3D AudioSource on the head, the `Grille` renderer glows while talking).
+- Done: step 3 (proximity voice, Steam + local codecs), step 4 (starter truck, seats, back step, horn/siren/lights, TestRoad).
+- Next: step 5, the hose (reel on the truck's rear, max length, pressure from a pump panel `Interactable`, tank drain, kickback, water knockback on players).
+- The host can switch scenes for everyone from F1 → Network.
 - Branch: `prototype`. These are **not** built yet, but the code should be structured so they slot in later: radio dispatch, economy, levels, rescues, other fire types, intermission calls, the ladder truck.
