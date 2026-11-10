@@ -143,6 +143,20 @@ namespace Firehouse.EditorTools
             NetworkPrefabsBuilder.SetField(arms, "_left", left);
             NetworkPrefabsBuilder.SetField(arms, "_right", right);
 
+            // --- proximity voice: 3D source at the mask grille
+            var voiceGo = new GameObject("VoiceSource");
+            voiceGo.transform.SetParent(head, false);
+            voiceGo.transform.localPosition = new Vector3(0, -0.05f, 0.4f);
+            var src = voiceGo.AddComponent<AudioSource>();
+            src.playOnAwake = false;
+            src.spatialBlend = 1f;
+            voiceGo.AddComponent<AudioLowPassFilter>().cutoffFrequency = 22000f;
+            var playback = voiceGo.AddComponent<Firehouse.Audio.VoicePlayback>();
+            var voice = root.AddComponent<SmokieVoice>();
+            NetworkPrefabsBuilder.SetField(voice, "_settings", LoadOrCreateVoiceSettings());
+            NetworkPrefabsBuilder.SetField(voice, "_playback", playback);
+            NetworkPrefabsBuilder.SetField(voice, "_grille", grille.GetComponent<Renderer>());
+
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
             Object.DestroyImmediate(root);
             NetworkPrefabsBuilder.RegisterNetworkPrefab(prefab);
@@ -346,6 +360,17 @@ namespace Firehouse.EditorTools
             stats = ScriptableObject.CreateInstance<PlayerStats>();
             AssetDatabase.CreateAsset(stats, StatsPath);
             return stats;
+        }
+
+        public static Firehouse.Audio.VoiceSettings LoadOrCreateVoiceSettings()
+        {
+            const string path = ProjectAssets.DataFolder + "/VoiceSettings.asset";
+            var s = AssetDatabase.LoadAssetAtPath<Firehouse.Audio.VoiceSettings>(path);
+            if (s != null) return s;
+            ProjectAssets.EnsureFolder(ProjectAssets.DataFolder);
+            s = ScriptableObject.CreateInstance<Firehouse.Audio.VoiceSettings>();
+            AssetDatabase.CreateAsset(s, path);
+            return s;
         }
 
         static PhysicsMaterial LoadOrCreatePlayerPhysicsMaterial()

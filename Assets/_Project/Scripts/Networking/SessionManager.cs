@@ -146,8 +146,19 @@ namespace Firehouse.Networking
             State = SessionState.Offline;
             Status = "";
             UIFocus.GameplayWantsCursorLock = false;
-            // Reload the start scene so the world resets to its offline state.
-            SceneManager.LoadScene(_startScene);
+            // Reload the start scene (after NGO finishes shutting down) so the world resets to its offline state.
+            StartCoroutine(ReloadStartSceneAfterShutdown());
+        }
+
+        private bool _reloading;
+
+        private System.Collections.IEnumerator ReloadStartSceneAfterShutdown()
+        {
+            _reloading = true;
+            while (_network.ShutdownInProgress || _network.IsListening) yield return null;
+            var op = SceneManager.LoadSceneAsync(_startScene);
+            while (op != null && !op.isDone) yield return null;
+            _reloading = false;
         }
 
         // ---------------- Internals ----------------
@@ -155,7 +166,7 @@ namespace Firehouse.Networking
         private bool CanStart()
         {
             if (State == SessionState.Connecting || InSession) return false;
-            if (_network.ShutdownInProgress || _network.IsListening)
+            if (_reloading || _network.ShutdownInProgress || _network.IsListening)
             {
                 Status = "Still shutting down the last game, try again in a moment.";
                 return false;
@@ -209,7 +220,7 @@ namespace Firehouse.Networking
             State = SessionState.Offline;
             Status = wasConnecting ? $"Couldn't connect. {reason}" : $"Lost connection to host. {reason}";
             UIFocus.GameplayWantsCursorLock = false;
-            if (!wasConnecting) SceneManager.LoadScene(_startScene);
+            if (!wasConnecting) StartCoroutine(ReloadStartSceneAfterShutdown());
         }
 
         private void Fail(string message)

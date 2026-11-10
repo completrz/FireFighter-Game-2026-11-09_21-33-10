@@ -111,6 +111,14 @@ Shader vertex colors: RGB is the albedo, and **alpha < 1 means emissive** (0 = f
 - Everything tunable lives in `Data/PlayerStats.asset` and shows up in the F1 panel.
 - Controls: WASD, mouse, Shift sprint, Space jump, LMB hold to grab, RMB throw, E interact (reserved). Gamepad is bound too.
 
+## Proximity voice
+
+- `SmokieVoice` (on the player): the owner captures audio and sends packets with `[Rpc(SendTo.NotMe, Delivery = Unreliable)]`. Receivers decode them into that Smokie's head `VoicePlayback`, a 3D AudioSource with a streaming clip, a jitter buffer, linear falloff, and a low-pass plus volume drop when a wall (Default layer) blocks the line to the listener.
+- **Codecs** (first byte of each packet): `Steam` (SteamUser record/compress) in Steam sessions, and `MuLaw12k` (Unity Microphone at 12 kHz μ-law, 50 ms packets) in Local sessions, so the voice works in MPPM clones without Steam. Everything plays back at 24 kHz.
+- The talk grille glows from the speaking level (`_GlowColor` set by MaterialPropertyBlock).
+- `Data/VoiceSettings.asset` (F1): open mic or push-to-talk (V / LB), mic gain, voice activation level, min/max distance, occlusion, jitter buffer, and **Loopback** (hear yourself; single-PC test).
+- Later: a radio upgrade (whole-crew channel) can reuse `VoiceRpc` with a 2D playback source.
+
 ## Networking rules (authority)
 
 | Thing | Owner |
@@ -149,5 +157,6 @@ Steam shows the game as "Spacewar" while we're on App ID 480. That's expected.
 
 Milestone 1 (prototype) is in progress: Steam lobby, Smokies controller, proximity voice, starter truck, hose, basic fire grid.
 - Done: step 0 (setup), step 1 (Steam/local session, lobby + join codes, firehouse blockout), step 2 (Smokies controller, arms, ladders/pole, grab and carry, props).
-- Next: step 3, proximity voice (Steam voice → 3D AudioSource on the head, the `Grille` renderer glows while talking).
+- Done: step 3 (proximity voice, Steam + local codecs).
+- Next: step 4, the starter truck (raycast suspension, seats, back step, horn/siren/lights) and the bumpy dirt road test map.
 - Branch: `prototype`. These are **not** built yet, but the code should be structured so they slot in later: radio dispatch, economy, levels, rescues, other fire types, intermission calls, the ladder truck.
