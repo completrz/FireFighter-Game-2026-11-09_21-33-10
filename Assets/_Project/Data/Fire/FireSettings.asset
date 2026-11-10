@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 488356abcb839ce469b99f880a6a1535, type: 3}
+  m_Name: FireSettings
+  m_EditorClassIdentifier: Firehouse.Runtime::Firehouse.Fire.FireSettings
+  _debugCategory: 
+  SimRate: 10
+  SyncRate: 4
+  Spread: 0.3
+  UpwardBias: 1.6
+  DownwardBias: 0.35
+  AmbientCooling: 0.06
+  MaxHeat: 1000
+  ExtinguishFraction: 0.55
+  Randomness: 0.45
+  MaxWet: 6
+  DryRate: 0.08
+  HeatPerWet: 90
+  WindDirection: {x: 1, y: 0, z: 0.3}
+  WindStrength: 0.6
+  FlameParticlesPerCell: 9
+  SmokeParticlesPerCell: 0.6

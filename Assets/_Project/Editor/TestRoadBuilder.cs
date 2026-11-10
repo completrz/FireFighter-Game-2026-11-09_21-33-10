@@ -100,8 +100,8 @@ namespace Firehouse.EditorTools
             new GameObject("PlayerSpawner").AddComponent<PlayerSpawner>();
 
             ProjectAssets.EnsureFolder(ProjectAssets.ScenesFolder);
-            EditorSceneManager.SaveScene(scene, ScenePath);
             FirehouseBlockoutBuilder.AddSceneToBuild(ScenePath);
+            ProjectAssets.SaveSceneWithNetworkIds(scene, ScenePath);
             Debug.Log($"[Firehouse] Built {ScenePath} (road {terrain.RoadLength:0} m, bridge at {crossing:0} m)");
         }
 

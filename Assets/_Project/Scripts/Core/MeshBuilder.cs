@@ -158,13 +158,30 @@ namespace Firehouse.Core
         public Mesh Build(string name = "Generated")
         {
             var mesh = new Mesh { name = name };
-            if (_verts.Count > 65000) mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            BuildInto(mesh);
+            return mesh;
+        }
+
+        /// <summary>Writes the geometry into an existing mesh (for meshes rebuilt at runtime, e.g. fire voxels).</summary>
+        public void BuildInto(Mesh mesh)
+        {
+            mesh.Clear();
+            mesh.indexFormat = _verts.Count > 65000 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
             mesh.SetVertices(_verts);
             mesh.SetNormals(_normals);
             mesh.SetColors(_colors);
             mesh.SetTriangles(_tris, 0);
             mesh.RecalculateBounds();
-            return mesh;
+        }
+
+        /// <summary>Empties the builder so it can be reused.</summary>
+        public void Clear()
+        {
+            _verts.Clear();
+            _normals.Clear();
+            _colors.Clear();
+            _tris.Clear();
+            Transform = Matrix4x4.identity;
         }
 
         /// <summary>Returns a copy of <paramref name="source"/> with every vertex set to <paramref name="color"/>.</summary>

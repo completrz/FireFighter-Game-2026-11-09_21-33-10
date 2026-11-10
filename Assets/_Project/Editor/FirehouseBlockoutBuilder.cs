@@ -65,8 +65,8 @@ namespace Firehouse.EditorTools
             new GameObject("PlayerSpawner").AddComponent<PlayerSpawner>();
 
             ProjectAssets.EnsureFolder(ProjectAssets.ScenesFolder);
-            EditorSceneManager.SaveScene(scene, ScenePath);
             AddSceneToBuild(ScenePath, first: true);
+            ProjectAssets.SaveSceneWithNetworkIds(scene, ScenePath);
             Debug.Log($"[Firehouse] Built {ScenePath}");
         }
 

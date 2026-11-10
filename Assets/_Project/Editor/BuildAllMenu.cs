@@ -15,6 +15,7 @@ namespace Firehouse.EditorTools
             TruckBuilder.Build();
             NetworkPrefabsBuilder.BuildNetworkRoot();
             TestRoadBuilder.Build();
+            TestFireBuilder.Build();
             FirehouseBlockoutBuilder.Build(); // last, so the Firehouse scene is left open
             AssetDatabase.SaveAssets();
         }

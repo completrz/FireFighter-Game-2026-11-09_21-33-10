@@ -12,6 +12,7 @@ Shader "Firehouse/FlatVertexColor"
         [HDR] _GlowColor("Glow (script driven)", Color) = (0,0,0,0)
         _WrapLight("Wrap Lighting", Range(0, 1)) = 0.25
         _Soot("Soot (darkening)", Range(0, 1)) = 0
+        [Toggle] _UseVertexColor("Use Vertex Color", Float) = 1 // 0 for particle materials (color from _BaseColor/_GlowColor)
     }
 
     SubShader
@@ -27,6 +28,7 @@ Shader "Firehouse/FlatVertexColor"
             half4 _GlowColor;
             half  _WrapLight;
             half  _Soot;
+            half  _UseVertexColor;
         CBUFFER_END
 
         float3 FlatNormal(float3 positionWS, float3 interpolatedNormalWS)
@@ -103,7 +105,8 @@ Shader "Firehouse/FlatVertexColor"
                 UNITY_SETUP_INSTANCE_ID(i);
                 float3 n = FlatNormal(i.positionWS, normalize(i.normalWS));
 
-                half3 albedo = i.color.rgb * _BaseColor.rgb * (1.0h - _Soot * 0.85h);
+                half4 vc = lerp(half4(1, 1, 1, 1), i.color, _UseVertexColor);
+                half3 albedo = vc.rgb * _BaseColor.rgb * (1.0h - _Soot * 0.85h);
 
                 InputData inputData = (InputData)0;
                 inputData.positionWS = i.positionWS;
@@ -130,7 +133,7 @@ Shader "Firehouse/FlatVertexColor"
                     LIGHT_LOOP_END
                 #endif
 
-                half3 emission = i.color.rgb * (1.0h - i.color.a) * _EmissionBoost + _GlowColor.rgb;
+                half3 emission = vc.rgb * (1.0h - vc.a) * _EmissionBoost + _GlowColor.rgb;
                 half3 col = albedo * lighting + emission;
                 col = MixFog(col, i.fogFactor);
                 return half4(col, 1);

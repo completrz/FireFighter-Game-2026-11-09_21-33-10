@@ -9,7 +9,32 @@ namespace Firehouse.Audio
     public static class ProceduralAudio
     {
         private const int Rate = 44100;
-        private static AudioClip s_horn, s_siren, s_engine;
+        private static AudioClip s_horn, s_siren, s_engine, s_crackle;
+
+        /// <summary>Fire crackle: a low roar plus random pops, loopable.</summary>
+        public static AudioClip FireCrackle => s_crackle ??= BuildCrackle();
+
+        private static AudioClip BuildCrackle()
+        {
+            const float seconds = 3f;
+            int n = Mathf.RoundToInt(Rate * seconds);
+            var data = new float[n];
+            var rng = new System.Random(11);
+            float roar = 0f, pop = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float white = (float)rng.NextDouble() * 2f - 1f;
+                roar = Mathf.Lerp(roar, white, 0.03f);               // low-passed rumble
+                if (rng.NextDouble() < 0.0006) pop = 0.9f;          // occasional crackle
+                pop *= 0.992f;
+                data[i] = roar * 0.5f + white * pop * 0.6f;
+            }
+            // Fade the ends so the loop seam doesn't click.
+            for (int i = 0; i < 400; i++) { float f = i / 400f; data[i] *= f; data[n - 1 - i] *= f; }
+            var clip = AudioClip.Create("FireCrackle", n, 1, Rate, false);
+            clip.SetData(data, 0);
+            return clip;
+        }
 
         /// <summary>Two-tone air-horn chord, loopable.</summary>
         public static AudioClip Horn => s_horn ??= Build("Horn", 1f, t =>

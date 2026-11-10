@@ -37,6 +37,26 @@ namespace Firehouse.EditorTools
         }
 
         /// <summary>
+        /// Saves a generated scene so its in-scene NetworkObjects get valid GlobalObjectIdHash values.
+        /// NGO derives the hash from the object's ID in the saved scene, so objects created by a builder
+        /// have hash 0 (and never spawn) until the scene is saved once and the NetworkObjects re-validated.
+        /// </summary>
+        public static void SaveSceneWithNetworkIds(UnityEngine.SceneManagement.Scene scene, string path)
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, path);
+            var validate = typeof(Unity.Netcode.NetworkObject).GetMethod("OnValidate",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var no in root.GetComponentsInChildren<Unity.Netcode.NetworkObject>(true))
+            {
+                validate?.Invoke(no, null);
+                EditorUtility.SetDirty(no);
+            }
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, path);
+        }
+
+        /// <summary>
         /// Before a builder replaces the open scene: asks to save only if a saved scene has unsaved edits.
         /// Untitled scratch scenes are discarded silently. Returns false if the user cancels.
         /// </summary>

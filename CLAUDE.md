@@ -176,6 +176,8 @@ Steam shows the game as "Spacewar" while we're on App ID 480. That's expected.
 Milestone 1 (prototype) is in progress: Steam lobby, Smokies controller, proximity voice, starter truck, hose, basic fire grid.
 - Done: step 0 (setup), step 1 (Steam/local session, lobby + join codes, firehouse blockout), step 2 (Smokies controller, arms, ladders/pole, grab and carry, props).
 - Done: step 3 (proximity voice, Steam + local codecs), step 4 (starter truck, seats, back step, horn/siren/lights, TestRoad).
+- Done: step 6 (grid fire: `Fire/` FireGridSim (host, unit-tested), FireGrid (voxelizes BurnableVolumes, syncs 1-byte cell states as deltas + snapshots), FireGridView (voxels, flames/smoke/steam, light, crackle), `FireSystem.ApplyAgentAt/IgniteAt` = the hose's entry point, data in `Data/Fire/`, `Scenes/TestFire.unity`, F1 → Fire ignite/douse buttons).
+- Gotchas: scene builders must save with `ProjectAssets.SaveSceneWithNetworkIds` (else in-scene NetworkObjects have hash 0 and never spawn); mesh particles use per-effect materials with `_UseVertexColor = 0` (particle vertex colors arrived garbled).
 - Next: step 5, the hose (reel on the truck's rear, max length, pressure from a pump panel `Interactable`, tank drain, kickback, water knockback on players).
 - The host can switch scenes for everyone from F1 → Network.
 - Branch: `prototype`. These are **not** built yet, but the code should be structured so they slot in later: radio dispatch, economy, levels, rescues, other fire types, intermission calls, the ladder truck.

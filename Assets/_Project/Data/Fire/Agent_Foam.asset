@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf67e4db63555f841ad8e0adb173beb3, type: 3}
+  m_Name: Agent_Foam
+  m_EditorClassIdentifier: Firehouse.Runtime::Firehouse.Fire.AgentDef
+  _debugCategory: 
+  Cooling: 130
+  Wetting: 0.6
+  Effectiveness:
+  - 0.8
+  - 1.2
+  - 0.2
+  - 0.6
+  - 0.1
+  - 0
+  WrongEffect: 000102030405y
