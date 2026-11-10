@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a22a749af57ff84418bb210e8db0d37b, type: 3}
+  m_Name: TruckStats_Starter
+  m_EditorClassIdentifier: Firehouse.Runtime::Firehouse.Truck.TruckStats
+  _debugCategory: 
+  Mass: 2600
+  CenterOfMassHeight: 0.45
+  RestLength: 0.45
+  Spring: 42000
+  Damper: 4200
+  WheelRadius: 0.48
+  EngineForce: 15000
+  MaxSpeed: 21
+  MaxReverseSpeed: 6
+  BrakeForce: 22000
+  RollingResistance: 0.35
+  MaxSteerAngle: 32
+  HighSpeedSteerFactor: 0.4
+  SteerSpeed: 6
+  TireFriction: 1.25
+  HandbrakeRearGrip: 0.3
+  AirAngularDamping: 1.2
+  BackStepEjectAccel: 22
+  CrashSpeedChange: 6
+  RunOverMinSpeed: 2.5
+  RunOverKnockdownSpeed: 5

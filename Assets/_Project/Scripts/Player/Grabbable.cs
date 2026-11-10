@@ -67,6 +67,26 @@ namespace Firehouse.Player
         // ---------------------------------------------------------------- requests (called by PlayerGrabber)
 
         public void RequestGrab() => GrabRpc();
+
+        private float _lastClaimRequest = -10f;
+
+        /// <summary>
+        /// Ask to simulate this object without holding it (the truck claims loose props it's about to hit,
+        /// so they get knocked aside on the driver's machine instead of acting like immovable walls).
+        /// </summary>
+        public void RequestClaim()
+        {
+            if (Time.time - _lastClaimRequest < 1f) return;
+            _lastClaimRequest = Time.time;
+            ClaimRpc();
+        }
+
+        [Rpc(SendTo.Server)]
+        private void ClaimRpc(RpcParams rpc = default)
+        {
+            ulong sender = rpc.Receive.SenderClientId;
+            if (_holders.Count == 0 && OwnerClientId != sender) NetworkObject.ChangeOwnership(sender);
+        }
         public void RequestRelease() => ReleaseRpc();
 
         [Rpc(SendTo.Server)]

@@ -241,6 +241,11 @@ namespace Firehouse.EditorTools
             Place(PropsBuilder.BigCratePath, new Vector3(0f, 0.46f, 26f), 15);
             Place(PropsBuilder.DummyPath, new Vector3(3f, 0.4f, 25f), 90);
             Place(PropsBuilder.CratePath, new Vector3(-4f, 0.31f, 27f));
+
+            // Starter truck parked in the right-hand stall, nose toward the bay door.
+            var truckPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(TruckBuilder.PrefabPath) ?? TruckBuilder.Build();
+            var truck = (GameObject)PrefabUtility.InstantiatePrefab(truckPrefab, root);
+            truck.transform.SetPositionAndRotation(new Vector3(-1.25f, 0.2f, 6.6f), Quaternion.Euler(0, 180, 0));
         }
 
         static void BuildLighting(Transform root)
@@ -295,7 +300,7 @@ namespace Firehouse.EditorTools
             {
                 var go = new GameObject($"Spawn {i + 1}");
                 go.transform.SetParent(parent, false);
-                go.transform.position = new Vector3(-8 + (i % 4) * 2.4f, 0.05f, 11 - (i / 4) * 1.8f);
+                go.transform.position = new Vector3(-8 + (i % 4) * 2.4f, 0.05f, 12.9f - (i / 4) * 1.4f); // behind the parked truck
                 go.transform.rotation = Quaternion.LookRotation(Vector3.back);
                 go.AddComponent<SpawnPoint>();
             }

@@ -24,6 +24,7 @@ namespace Firehouse.EditorTools
         public static string BallPath => $"{Folder}/P_Ball.prefab";
         public static string ConePath => $"{Folder}/P_Cone.prefab";
         public static string DummyPath => $"{Folder}/P_RescueDummy.prefab";
+        public static string MailboxPath => $"{Folder}/P_Mailbox.prefab";
 
         [MenuItem("Tools/Firehouse/Build/Props")]
         public static void BuildAll()
@@ -75,6 +76,22 @@ namespace Firehouse.EditorTools
                 cc.height = 1.5f;
                 cc.center = new Vector3(0, 0.15f, 0);
             }, maxHolders: 2);
+
+            // Rural mailbox on a post: free-standing so the truck can send it flying
+            var mailbox = new MeshBuilder()
+                .AddBox(new Vector3(0, 0.55f, 0), new Vector3(0.1f, 1.1f, 0.1f), WoodDark)
+                .AddBox(new Vector3(0, 1.2f, 0), new Vector3(0.28f, 0.22f, 0.5f), new Color(0.25f, 0.35f, 0.6f))
+                .AddBox(new Vector3(0.16f, 1.3f, -0.1f), new Vector3(0.02f, 0.18f, 0.06f), new Color(0.85f, 0.15f, 0.1f)) // flag
+                .AddBox(new Vector3(0, 0.04f, 0), new Vector3(0.4f, 0.08f, 0.4f), WoodDark).Build();
+            Make("P_Mailbox", "Mailbox", mailbox, 12f, go =>
+            {
+                var post = go.AddComponent<BoxCollider>();
+                post.size = new Vector3(0.4f, 1.1f, 0.4f);
+                post.center = new Vector3(0, 0.55f, 0);
+                var box = go.AddComponent<BoxCollider>();
+                box.size = new Vector3(0.3f, 0.35f, 0.52f);
+                box.center = new Vector3(0, 1.25f, 0);
+            });
 
             AssetDatabase.SaveAssets();
         }

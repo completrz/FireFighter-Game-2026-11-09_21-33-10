@@ -240,6 +240,17 @@ namespace Firehouse.Networking
                 GUILayout.Label($"Clients: {_network.ConnectedClientsIds.Count}  LocalId: {_network.LocalClientId}");
                 if (!_network.IsServer)
                     GUILayout.Label($"RTT: {_network.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.ServerClientId)} ms");
+                if (_network.IsServer)
+                {
+                    GUILayout.Label("Host: load scene for everyone");
+                    GUILayout.BeginHorizontal();
+                    for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+                    {
+                        var scene = System.IO.Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(i));
+                        if (GUILayout.Button(scene)) _network.SceneManager.LoadScene(scene, LoadSceneMode.Single);
+                    }
+                    GUILayout.EndHorizontal();
+                }
             }
         }
     }

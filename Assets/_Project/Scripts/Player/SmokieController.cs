@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Firehouse.Player
 {
-    public enum SmokieState : byte { Walking, Climbing, KnockedDown, GettingUp }
+    public enum SmokieState : byte { Walking, Climbing, KnockedDown, GettingUp, Seated }
 
     /// <summary>
     /// First-person physics controller for a Smokie. The owning client simulates its Rigidbody
@@ -64,6 +64,19 @@ namespace Firehouse.Player
         private Vector3 _remoteVelocity;
         private Vector3 _lastRemotePos;
 
+        // Riding a truck (seat occupancy lives on TruckSeats, so every client can place us without extra sync).
+        private Truck.TruckSeats _seats;
+        private int _seatIndex = -1;
+        private Truck.TruckSeats _lastSeats;
+        private int _lastSeatIndex = -1;
+        private float _seatLook;              // yaw of the head relative to the seat
+        private Vector3? _pendingKnockback;   // knockback that arrived while still seated (e.g. thrown off the back step)
+        private bool _pendingForceKnockdown;
+        private float _pendingKnockbackTime;
+
+        public bool IsSeated => _seatIndex >= 0;
+        public Truck.TruckSeat CurrentSeat => _seats != null && _seatIndex >= 0 ? _seats.Seats[_seatIndex] : null;
+
         private void Awake()
         {
             _rb = GetComponent<Rigidbody>();
@@ -104,6 +117,7 @@ namespace Firehouse.Player
         private void Update()
         {
             if (!IsSpawned) return;
+            _seatIndex = Truck.TruckSeats.FindSeatOf(OwnerClientId, out _seats);
 
             if (!IsOwner)
             {
@@ -117,15 +131,18 @@ namespace Firehouse.Player
                 return;
             }
 
-            bool canAct = !UIFocus.IsBlocked && (_state.Value == SmokieState.Walking || _state.Value == SmokieState.Climbing);
+            var st = _state.Value;
+            bool canLook = !UIFocus.IsBlocked && (st == SmokieState.Walking || st == SmokieState.Climbing || st == SmokieState.Seated);
+            bool canAct = !UIFocus.IsBlocked && (st == SmokieState.Walking || st == SmokieState.Climbing);
             bool usingGamepad = Input.Look.activeControl?.device is UnityEngine.InputSystem.Gamepad;
-            if (canAct && (Cursor.lockState == CursorLockMode.Locked || usingGamepad))
+            if (canLook && (Cursor.lockState == CursorLockMode.Locked || usingGamepad))
             {
                 var d = Input.ReadLookDegrees(_stats.MouseSensitivity, _stats.GamepadLookSpeed);
-                _yaw += d.x;
+                if (st == SmokieState.Seated) _seatLook = Mathf.Clamp(_seatLook + d.x, -150f, 150f);
+                else _yaw += d.x;
                 _pitch = Mathf.Clamp(_pitch - d.y, -85f, 85f);
             }
-            _cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+            _cameraPivot.localRotation = Quaternion.Euler(_pitch, st == SmokieState.Seated ? _seatLook : 0f, 0f);
             if (Mathf.Abs(_pitch - _pitchNet.Value) >= 1f) _pitchNet.Value = (sbyte)Mathf.RoundToInt(_pitch);
 
             if (canAct && Input.Jump.WasPressedThisFrame()) _jumpBufferedUntil = Time.time + 0.15f;
@@ -137,14 +154,83 @@ namespace Firehouse.Player
         {
             if (!IsSpawned || !IsOwner) return;
 
+            // Seat changes come from the host's occupancy list.
+            if (IsSeated && _state.Value != SmokieState.Seated) EnterSeat();
+            else if (!IsSeated && _state.Value == SmokieState.Seated) ExitSeat();
+
             switch (_state.Value)
             {
                 case SmokieState.Walking: TickWalking(); break;
                 case SmokieState.Climbing: TickClimbing(); break;
                 case SmokieState.KnockedDown: TickKnockedDown(); break;
                 case SmokieState.GettingUp: TickGettingUp(); break;
+                case SmokieState.Seated: SnapToSeat(); break;
             }
             _prevVerticalSpeed = _rb.linearVelocity.y;
+        }
+
+        // ---------------------------------------------------------------- Seats
+
+        private void EnterSeat()
+        {
+            if (_state.Value == SmokieState.Climbing) StopClimbing(Vector3.zero);
+            _state.Value = SmokieState.Seated;
+            _rb.constraints = RigidbodyConstraints.FreezeRotation;
+            _rb.linearVelocity = Vector3.zero;
+            _rb.isKinematic = true;
+            _seatLook = 0f;
+            _lastSeats = _seats;
+            _lastSeatIndex = _seatIndex;
+            SnapToSeat();
+        }
+
+        private void ExitSeat()
+        {
+            Vector3 exitPos = transform.position, inherit = Vector3.zero;
+            if (_pendingKnockback.HasValue && Time.time - _pendingKnockbackTime > 1f) _pendingKnockback = null; // stale hit while seated
+            if (_lastSeats != null && _lastSeatIndex >= 0)
+            {
+                var seat = _lastSeats.Seats[_lastSeatIndex];
+                inherit = _lastSeats.Truck.GetPointVelocity(seat.transform.position);
+                // Getting out on purpose puts you beside the truck; being thrown off starts from the seat itself.
+                exitPos = _pendingKnockback.HasValue ? seat.transform.position + Vector3.up * 0.3f : seat.ExitPoint + Vector3.up * 0.2f;
+                _yaw = seat.transform.eulerAngles.y + _seatLook;
+            }
+            _seatLook = 0f;
+            _rb.isKinematic = false;
+            _rb.position = exitPos;
+            transform.position = exitPos;
+            _rb.rotation = Quaternion.Euler(0f, _yaw, 0f);
+            _rb.linearVelocity = inherit;
+            _state.Value = SmokieState.Walking;
+            _lastSeats = null;
+            _lastSeatIndex = -1;
+
+            if (_pendingKnockback.HasValue)
+            {
+                var v = _pendingKnockback.Value;
+                _pendingKnockback = null;
+                ApplyKnockback(v - inherit, _pendingForceKnockdown); // launch velocity already includes the truck's motion
+            }
+        }
+
+        private void SnapToSeat()
+        {
+            var seat = CurrentSeat;
+            if (seat == null) return;
+            _rb.position = seat.transform.position;
+            _rb.rotation = seat.transform.rotation;
+        }
+
+        /// <summary>Everyone places seated players on their seat after interpolation, so riders stay glued to the truck.</summary>
+        private void LateUpdate()
+        {
+            if (!IsSpawned) return;
+            bool seated = IsSeated;
+            if (_col.enabled == seated) _col.enabled = !seated;
+            if (!seated) return;
+            var seat = CurrentSeat;
+            transform.SetPositionAndRotation(seat.transform.position, seat.transform.rotation);
         }
 
         private Vector2 MoveInput => UIFocus.IsBlocked ? Vector2.zero : Vector2.ClampMagnitude(Input.Move.ReadValue<Vector2>(), 1f);
@@ -170,7 +256,8 @@ namespace Firehouse.Player
             // Stand still relative to whatever we're standing on (the truck bed later).
             if (_grounded && _groundBody != null)
             {
-                var gv = _groundBody.GetPointVelocity(_rb.position);
+                var truck = _groundBody.GetComponent<Truck.TruckController>();
+                var gv = truck != null ? truck.GetPointVelocity(_rb.position) : _groundBody.GetPointVelocity(_rb.position);
                 desired += new Vector3(gv.x, 0f, gv.z);
             }
 
@@ -310,6 +397,14 @@ namespace Firehouse.Player
 
         private void ApplyKnockback(Vector3 velocityChange, bool forceKnockdown)
         {
+            if (_state.Value == SmokieState.Seated)
+            {
+                // Seats protect you, except when the host is throwing you off (seat freed right after this).
+                _pendingKnockback = velocityChange;
+                _pendingForceKnockdown = forceKnockdown;
+                _pendingKnockbackTime = Time.time;
+                return;
+            }
             if (_state.Value == SmokieState.Climbing) StopClimbing(_rb.linearVelocity);
             _rb.AddForce(velocityChange, ForceMode.VelocityChange);
             if (forceKnockdown || velocityChange.magnitude >= _stats.KnockdownImpulse)

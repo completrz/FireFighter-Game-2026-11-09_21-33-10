@@ -12,8 +12,10 @@ namespace Firehouse.EditorTools
             ArtTestSceneBuilder.CreateSharedMaterial();
             SmokieBuilder.Build();
             PropsBuilder.BuildAll();
+            TruckBuilder.Build();
             NetworkPrefabsBuilder.BuildNetworkRoot();
-            FirehouseBlockoutBuilder.Build();
+            TestRoadBuilder.Build();
+            FirehouseBlockoutBuilder.Build(); // last, so the Firehouse scene is left open
             AssetDatabase.SaveAssets();
         }
     }

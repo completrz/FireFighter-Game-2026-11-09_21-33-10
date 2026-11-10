@@ -42,7 +42,8 @@ namespace Firehouse.Player
             UpdateCollisionIgnore(held);
             _aimed = held == null ? FindAimed() : null;
 
-            bool blocked = UIFocus.IsBlocked || _smokie.State == SmokieState.KnockedDown;
+            bool blocked = UIFocus.IsBlocked || _smokie.State == SmokieState.KnockedDown || _smokie.State == SmokieState.Seated;
+            if (_smokie.State == SmokieState.Seated && held != null) ReleaseHeld();
             bool grabDown = !blocked && _smokie.Input.Grab.IsPressed();
             IsReaching = grabDown && held == null;
 
