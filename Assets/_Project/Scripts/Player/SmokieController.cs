@@ -131,6 +131,7 @@ namespace Firehouse.Player
                 return;
             }
 
+            Input ??= new PlayerInputReader(); // lost after a script reload during play
             var st = _state.Value;
             bool canLook = !UIFocus.IsBlocked && (st == SmokieState.Walking || st == SmokieState.Climbing || st == SmokieState.Seated);
             bool canAct = !UIFocus.IsBlocked && (st == SmokieState.Walking || st == SmokieState.Climbing);
@@ -153,6 +154,7 @@ namespace Firehouse.Player
         private void FixedUpdate()
         {
             if (!IsSpawned || !IsOwner) return;
+            Input ??= new PlayerInputReader(); // lost after a script reload during play
 
             // Seat changes come from the host's occupancy list.
             if (IsSeated && _state.Value != SmokieState.Seated) EnterSeat();

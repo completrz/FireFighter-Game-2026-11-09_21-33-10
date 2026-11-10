@@ -140,6 +140,36 @@ namespace Firehouse.EditorTools
             NetworkPrefabsBuilder.SetField(fx, "_flashRight", flashR);
             NetworkPrefabsBuilder.SetField(fx, "_headlights", head);
 
+            // ---- water: tank/pump/hose, reel at the back, pump panel on the right side behind the cab
+            var reelPoint = new GameObject("HoseReelPoint").transform;
+            reelPoint.SetParent(root.transform, false);
+            reelPoint.localPosition = new Vector3(0, 1.95f, -2.85f);
+            var water = root.AddComponent<Firehouse.Water.TruckWater>();
+            NetworkPrefabsBuilder.SetField(water, "_stats", LoadOrCreateHoseStats());
+            NetworkPrefabsBuilder.SetField(water, "_reelPoint", reelPoint);
+            NetworkPrefabsBuilder.SetField(water, "_material", mat);
+
+            var reelGo = new GameObject("HoseReel");
+            reelGo.transform.SetParent(root.transform, false);
+            reelGo.transform.localPosition = new Vector3(0, 1.3f, -2.95f);
+            NetworkPrefabsBuilder.SetField(reelGo.AddComponent<Firehouse.Water.HoseReel>(), "_water", water);
+
+            var panelGo = new GameObject("PumpPanel");
+            panelGo.transform.SetParent(root.transform, false);
+            panelGo.transform.localPosition = new Vector3(1.1f, 1.3f, 0.6f);
+            NetworkPrefabsBuilder.SetField(panelGo.AddComponent<Firehouse.Water.PumpPanel>(), "_water", water);
+            // Panel visual: gauges on a steel plate (it sits where the forward roll-up door was)
+            var panelMesh = new MeshBuilder();
+            panelMesh.AddBox(new Vector3(1.07f, 1.3f, 0.6f), new Vector3(0.04f, 0.7f, 0.55f), Chrome);
+            foreach (float z in new[] { 0.45f, 0.75f })
+            {
+                panelMesh.SetTRS(new Vector3(1.1f, 1.45f, z), Quaternion.Euler(0, 0, 90), Vector3.one);
+                panelMesh.AddCylinder(Vector3.zero, 0.09f, 0.09f, 0.03f, 10, new Color(0.95f, 0.95f, 0.9f));
+                panelMesh.ResetTransform();
+            }
+            panelMesh.AddBox(new Vector3(1.1f, 1.12f, 0.6f), new Vector3(0.04f, 0.12f, 0.3f), new Color(0.85f, 0.15f, 0.1f, 0.6f)); // throttle knob
+            Part(root.transform, "PumpPanelMesh", ProjectAssets.SaveMesh(panelMesh.Build(), "Truck_PumpPanel"), mat);
+
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             Object.DestroyImmediate(root);
             NetworkPrefabsBuilder.RegisterNetworkPrefab(prefab);
@@ -348,6 +378,18 @@ namespace Firehouse.EditorTools
             l.shadows = LightShadows.None;
             l.enabled = false;
             return l;
+        }
+
+        public static Firehouse.Water.HoseStats LoadOrCreateHoseStats()
+        {
+            const string path = ProjectAssets.DataFolder + "/HoseStats_Starter.asset";
+            var s = AssetDatabase.LoadAssetAtPath<Firehouse.Water.HoseStats>(path);
+            if (s != null) return s;
+            FireAssetsBuilder.BuildAll();
+            s = ScriptableObject.CreateInstance<Firehouse.Water.HoseStats>();
+            s.Agent = FireAssetsBuilder.Agent("Water");
+            AssetDatabase.CreateAsset(s, path);
+            return s;
         }
 
         public static TruckStats LoadOrCreateStats()

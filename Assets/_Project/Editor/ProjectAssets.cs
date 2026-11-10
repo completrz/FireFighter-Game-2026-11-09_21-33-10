@@ -57,8 +57,9 @@ namespace Firehouse.EditorTools
         }
 
         /// <summary>
-        /// Before a builder replaces the open scene: asks to save only if a saved scene has unsaved edits.
-        /// Untitled scratch scenes are discarded silently. Returns false if the user cancels.
+        /// Before a builder replaces the open scene: saves any saved scene with unsaved edits (no dialog, so
+        /// builders run unattended and never block the editor or the MCP bridge). Untitled scratch scenes are discarded.
+        /// Always returns true; kept as a bool so builders can still bail out if this ever needs to ask again.
         /// </summary>
         public static bool ConfirmSaveOpenScenes()
         {
@@ -66,7 +67,10 @@ namespace Firehouse.EditorTools
             {
                 var s = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
                 if (s.isDirty && !string.IsNullOrEmpty(s.path))
-                    return UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+                {
+                    Debug.Log($"[Firehouse] Saving modified scene {s.path} before rebuilding.");
+                    UnityEditor.SceneManagement.EditorSceneManager.SaveScene(s);
+                }
             }
             return true;
         }

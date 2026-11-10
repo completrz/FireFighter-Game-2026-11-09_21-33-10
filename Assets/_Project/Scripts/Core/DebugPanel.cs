@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -53,14 +54,15 @@ namespace Firehouse.Core
         {
             _scroll = GUILayout.BeginScrollView(_scroll);
 
-            foreach (var (title, draw) in TuningRegistry.Sections)
+            // Copies: a button inside a section (leave, load scene...) can add/remove sections mid-draw.
+            foreach (var (title, draw) in new List<(string, System.Action)>(TuningRegistry.Sections))
             {
                 GUILayout.Label($"<b>{title}</b>", RichLabel);
                 draw?.Invoke();
                 GUILayout.Space(8);
             }
 
-            foreach (var entry in TuningRegistry.Entries)
+            foreach (var entry in new List<TuningRegistry.Entry>(TuningRegistry.Entries))
             {
                 if (entry.Asset == null || entry.Fields.Count == 0) continue;
                 GUILayout.Label($"<b>{entry.Asset.DebugCategory}</b>", RichLabel);

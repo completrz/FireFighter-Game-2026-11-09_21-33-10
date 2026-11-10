@@ -56,8 +56,15 @@ namespace Firehouse.Player
 
             if (_smokie.State == SmokieState.KnockedDown) return; // full flop
 
+            var hose = _smokie.IsSpawned ? Water.TruckWater.HeldBy(_smokie.OwnerClientId) : null;
             var held = _grabber != null ? _grabber.Held : null;
-            if (held != null)
+            if (hose != null && hose.TryGetNozzle(out var nozzle, out var aim))
+            {
+                // Both hands on the nozzle, one a bit further back along the line.
+                Pull(_left[^1], nozzle - aim * 0.25f - right * 0.08f);
+                Pull(_right[^1], nozzle + right * 0.06f);
+            }
+            else if (held != null)
             {
                 var c = held.Body.worldCenterOfMass;
                 float spread = Mathf.Clamp(held.GetComponentInChildren<Collider>().bounds.extents.magnitude * 0.6f, 0.15f, 0.5f);

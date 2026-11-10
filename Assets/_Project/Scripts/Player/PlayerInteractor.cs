@@ -35,6 +35,16 @@ namespace Firehouse.Player
                 return;
             }
 
+            // Holding the hose: LMB sprays (handled by TruckWater), E drops it.
+            var hose = Water.TruckWater.HeldBy(OwnerClientId);
+            if (hose != null)
+            {
+                _focus = null;
+                _seatedPrompt = $"LMB spray · E drop hose   (pump {hose.Pressure * 100f:0}% · tank {hose.Tank01 * 100f:0}%)";
+                if (!blocked && _smokie.Input.Interact.WasPressedThisFrame()) hose.RequestDropHose();
+                return;
+            }
+
             _seatedPrompt = null;
             _focus = blocked || _smokie.State == SmokieState.KnockedDown ? null : FindBest();
             if (_focus != null && _smokie.Input.Interact.WasPressedThisFrame())
