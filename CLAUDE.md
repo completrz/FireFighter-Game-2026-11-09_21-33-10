@@ -100,6 +100,7 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 | Build/Test Road Scene | `Scenes/TestRoad.unity`: procedural terrain and road, bridge, mailboxes, fences, the truck and spawns |
 | Build/Network Root | `Resources/NetworkRoot.prefab` |
 | Build/Firehouse Blockout Scene | `Scenes/Firehouse.unity` and sets it as build index 0 |
+| Render Concept Art | Stages a hand-posed key-art shot in a scratch scene and writes `docs/concept-art.png` (used by README) |
 | Build/Art Test Scene | An unsaved scratch scene with shader test shapes |
 
 Shader vertex colors: RGB is the albedo, and **alpha < 1 means emissive** (0 = full glow). `_GlowColor` (set by MaterialPropertyBlock) adds script-driven glow, and `_BaseColor` (set by MaterialPropertyBlock) tints, e.g. coat color.
