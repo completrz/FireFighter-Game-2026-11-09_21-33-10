@@ -92,12 +92,24 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 | --- | --- |
 | Build/Rebuild Everything | All of the items below, in order |
 | Setup/Create Shared Material | `Art/Materials/M_VertexColor.mat` (shader `Firehouse/FlatVertexColor`) |
-| Build/Player Prefab | `Prefabs/P_Player.prefab` and registers it in `Data/NetworkPrefabs.asset` |
+| Setup/Physics Layers | Layer names and the collision matrix from `Firehouse.Core.Layers` |
+| Build/Player Prefab (Smokie) | Smokie meshes, `Prefabs/P_Player.prefab` and `Data/PlayerStats.asset`, and registers it in `Data/NetworkPrefabs.asset` |
+| Build/Props | `Prefabs/Props/*` carryables (crate, big crate, ball, cone, rescue dummy) |
 | Build/Network Root | `Resources/NetworkRoot.prefab` |
 | Build/Firehouse Blockout Scene | `Scenes/Firehouse.unity` and sets it as build index 0 |
 | Build/Art Test Scene | An unsaved scratch scene with shader test shapes |
 
 Shader vertex colors: RGB is the albedo, and **alpha < 1 means emissive** (0 = full glow). `_GlowColor` (set by MaterialPropertyBlock) adds script-driven glow, and `_BaseColor` (set by MaterialPropertyBlock) tints, e.g. coat color.
+
+## Player (Smokies)
+
+- `SmokieController`: a rigidbody capsule (70 kg, frictionless, rotation frozen) simulated by its **owner**. States: Walking, Climbing, KnockedDown, GettingUp. Everyone else sees it through an owner-authority NetworkTransform plus NetworkRigidbody, so on non-owners it's kinematic.
+- **Pushing players:** call `smokie.Knockback(velocityChange, forceKnockdown)` from anywhere. It forwards to the owner by RPC, and a velocity change ≥ `KnockdownImpulse` knocks them over. Hard landings knock players down too. This is the hook for hoses, axes and trucks.
+- **Ladders and poles:** the `Ladder` component plus a trigger box on the Trigger layer. Its `transform.forward` points from the climber toward the ladder.
+- **Grabbing:** `Grabbable` (host keeps the holder list, ownership goes to the first holder, max holders per object) and `PlayerGrabber` (hold LMB, RMB throws). Carrying is a spring with a strength cap, so heavy things need two people.
+- **Cosmetics:** `SmokieArms` (local-only jointed floppy arms, detached into world space at runtime) and `SmokieFace` (swaps the eye mesh: normal, wide or X).
+- Everything tunable lives in `Data/PlayerStats.asset` and shows up in the F1 panel.
+- Controls: WASD, mouse, Shift sprint, Space jump, LMB hold to grab, RMB throw, E interact (reserved). Gamepad is bound too.
 
 ## Networking rules (authority)
 
@@ -136,6 +148,6 @@ Steam shows the game as "Spacewar" while we're on App ID 480. That's expected.
 ## Status
 
 Milestone 1 (prototype) is in progress: Steam lobby, Smokies controller, proximity voice, starter truck, hose, basic fire grid.
-- Done: step 0 (setup), step 1 (Steam/local session, lobby + join codes, firehouse blockout, placeholder player).
-- Next: step 2, the Smokies character (replaces `SimplePlayerMotor` and the placeholder mesh in P_Player).
+- Done: step 0 (setup), step 1 (Steam/local session, lobby + join codes, firehouse blockout), step 2 (Smokies controller, arms, ladders/pole, grab and carry, props).
+- Next: step 3, proximity voice (Steam voice → 3D AudioSource on the head, the `Grille` renderer glows while talking).
 - Branch: `prototype`. These are **not** built yet, but the code should be structured so they slot in later: radio dispatch, economy, levels, rescues, other fire types, intermission calls, the ladder truck.

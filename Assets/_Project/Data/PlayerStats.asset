@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13574bbc814018e4d8f4acd9da566210, type: 3}
+  m_Name: PlayerStats
+  m_EditorClassIdentifier: Firehouse.Runtime::Firehouse.Player.PlayerStats
+  _debugCategory: 
+  WalkSpeed: 3.8
+  SprintSpeed: 6.2
+  GroundAccel: 45
+  AirAccel: 7
+  JumpSpeed: 5.2
+  GravityMultiplier: 1.4
+  CoyoteTime: 0.12
+  MouseSensitivity: 0.09
+  GamepadLookSpeed: 170
+  FieldOfView: 78
+  ClimbSpeed: 2.4
+  PoleSlideSpeed: 7
+  KnockdownImpulse: 6
+  KnockdownMinTime: 1.4
+  GetUpTime: 0.45
+  FallKnockdownSpeed: 11
+  GrabRange: 2.6
+  HoldDistance: 1.35
+  CarryStrength: 900
+  CarryStiffness: 30
+  CarryDamping: 8
+  ThrowSpeed: 9
+  DropDistance: 2.4

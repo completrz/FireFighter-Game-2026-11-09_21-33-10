@@ -8,8 +8,10 @@ namespace Firehouse.EditorTools
         [MenuItem("Tools/Firehouse/Build/Rebuild Everything", priority = 0)]
         public static void RebuildEverything()
         {
+            LayerSetup.Apply();
             ArtTestSceneBuilder.CreateSharedMaterial();
-            NetworkPrefabsBuilder.BuildPlayerPrefab();
+            SmokieBuilder.Build();
+            PropsBuilder.BuildAll();
             NetworkPrefabsBuilder.BuildNetworkRoot();
             FirehouseBlockoutBuilder.Build();
             AssetDatabase.SaveAssets();

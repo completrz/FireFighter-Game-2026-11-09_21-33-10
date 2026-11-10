@@ -55,7 +55,9 @@ namespace Firehouse.EditorTools
             BuildBay(b);
             BuildWing(b);
             BuildBackLot(b);
+            BuildClimbables(b);
             b.Finish("Firehouse");
+            BuildProps(root);
 
             BuildLighting(root);
             BuildSpawns(root);
@@ -96,7 +98,7 @@ namespace Firehouse.EditorTools
                 new O(5, 6.5f, 0, 2.4f),          // ground doorway to the day room
                 new O(14, 20, Upper, BayTop));    // loft opens into the upstairs hall
             // Loft at the back of the bay, with a hole for the fire pole
-            const float poleX = -1f, poleZ = 15.5f, hole = 0.7f;
+            const float poleX = PoleX, poleZ = PoleZ, hole = 0.7f;
             b.Box(g, "Loft", new Vector3(-10, Upper - 0.2f, 14), new Vector3(poleX - hole, Upper, 20), Wood);
             b.Box(g, "Loft", new Vector3(poleX + hole, Upper - 0.2f, 14), new Vector3(4, Upper, 20), Wood);
             b.Box(g, "Loft", new Vector3(poleX - hole, Upper - 0.2f, 14), new Vector3(poleX + hole, Upper, poleZ - hole), Wood);
@@ -190,7 +192,7 @@ namespace Firehouse.EditorTools
             b.Box(g, "Fence", new Vector3(15.9f, 0, 20), new Vector3(16.1f, 1.6f, 40), Fence);
             b.Box(g, "Fence", new Vector3(-12, 0, 39.9f), new Vector3(16, 1.6f, 40.1f), Fence);
             // Training tower (open frame + platforms)
-            const float tx = 8, tz = 32, s = 3, h = 9;
+            const float tx = TowerX, tz = TowerZ, s = 3, h = TowerH;
             foreach (var (dx, dz) in new[] { (0f, 0f), (s, 0f), (0f, s), (s, s) })
                 b.Box(g, "TowerPost", new Vector3(tx + dx - 0.15f, 0, tz + dz - 0.15f), new Vector3(tx + dx + 0.15f, h, tz + dz + 0.15f), Red);
             for (int lvl = 1; lvl <= 3; lvl++)
@@ -202,6 +204,43 @@ namespace Firehouse.EditorTools
             b.Box(g, "Plank", new Vector3(-8, 0, 34), new Vector3(-2, 1, 34.6f), Wood);
             for (int i = 0; i < 6; i++)
                 b.AddMeshPart(g, mb => mb.AddCylinder(new Vector3(-7.5f + i, 1.15f, 34.3f), 0.12f, 0.12f, 0.3f, 8, Red));
+        }
+
+        // Shared with the bay/back lot geometry above.
+        const float PoleX = -1f, PoleZ = 15.5f;
+        const float TowerX = 8, TowerZ = 32, TowerH = 9;
+
+        static void BuildClimbables(Blockout b)
+        {
+            // Fire pole: slide down from the loft; climb back up slowly.
+            b.ClimbVolume("FirePole", new Vector3(PoleX, 2.6f, PoleZ), new Vector3(0.9f, 5.2f, 0.9f), Vector3.forward, pole: true);
+            // Training tower ladder on its front face (rungs are drawn in BuildBackLot).
+            b.ClimbVolume("TowerLadder", new Vector3(TowerX + 1.5f, TowerH * 0.5f, TowerZ - 0.5f), new Vector3(1.0f, TowerH, 0.6f), Vector3.forward, pole: false);
+        }
+
+        static void BuildProps(Transform root)
+        {
+            PropsBuilder.BuildAll();
+            var parent = new GameObject("Props").transform;
+            parent.SetParent(root, false);
+            void Place(string path, Vector3 pos, float yaw = 0f)
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+                go.transform.SetPositionAndRotation(pos, Quaternion.Euler(0, yaw, 0));
+            }
+            // Bay
+            Place(PropsBuilder.CratePath, new Vector3(2.6f, 0.31f, 3.0f), 10);
+            Place(PropsBuilder.CratePath, new Vector3(2.6f, 0.31f, 3.8f), -5);
+            Place(PropsBuilder.CratePath, new Vector3(2.6f, 0.92f, 3.4f), 30);
+            Place(PropsBuilder.BallPath, new Vector3(-8.6f, 0.15f, 7.0f));
+            Place(PropsBuilder.BallPath, new Vector3(-8.2f, 0.15f, 5.8f));
+            // Apron
+            for (int i = 0; i < 4; i++) Place(PropsBuilder.ConePath, new Vector3(-8 + i * 2.5f, 0.03f, -6f));
+            // Back lot
+            Place(PropsBuilder.BigCratePath, new Vector3(0f, 0.46f, 26f), 15);
+            Place(PropsBuilder.DummyPath, new Vector3(3f, 0.4f, 25f), 90);
+            Place(PropsBuilder.CratePath, new Vector3(-4f, 0.31f, 27f));
         }
 
         static void BuildLighting(Transform root)

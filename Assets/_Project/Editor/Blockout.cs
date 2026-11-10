@@ -80,7 +80,10 @@ namespace Firehouse.EditorTools
             if (cursor < s1) yield return (cursor, s1, y0, y1);
         }
 
-        /// <summary>Straight staircase rising along +X or +Z. Each step is a box from the floor up (solid, no gaps).</summary>
+        /// <summary>
+        /// Straight staircase. Steps are visual only; collision is one smooth ramp so the rigidbody player
+        /// (which has no step-up logic) walks up without catching on step edges.
+        /// </summary>
         public void Stairs(string group, string name, Vector3 start, Vector3 dir, float width, float run, float rise, int steps, Color color)
         {
             dir = dir.normalized;
@@ -90,8 +93,31 @@ namespace Firehouse.EditorTools
             {
                 var a = start + dir * (i * stepRun) - side * (width * 0.5f);
                 var b = start + dir * ((i + 1) * stepRun) + side * (width * 0.5f) + Vector3.up * ((i + 1) * stepRise);
-                Box(group, $"{name}_{i}", Vector3.Min(a, b), Vector3.Max(a, b), color);
+                Box(group, $"{name}_{i}", Vector3.Min(a, b), Vector3.Max(a, b), color, collider: false);
             }
+            // Ramp through the step nosings.
+            var slope = dir * run + Vector3.up * rise;
+            const float thickness = 0.2f;
+            var rot = Quaternion.LookRotation(slope.normalized, Vector3.Cross(slope, side).normalized);
+            if (Vector3.Dot(rot * Vector3.up, Vector3.up) < 0) rot = Quaternion.LookRotation(slope.normalized, -Vector3.Cross(slope, side).normalized);
+            var center = start + slope * 0.5f - (rot * Vector3.up) * (thickness * 0.5f);
+            var go = new GameObject($"{name}_Ramp");
+            go.transform.SetParent(_colliders, false);
+            go.transform.SetPositionAndRotation(center, rot);
+            go.AddComponent<BoxCollider>().size = new Vector3(width, thickness, slope.magnitude);
+        }
+
+        /// <summary>Adds a ladder/pole climb volume (Ladder component + trigger box on the Trigger layer).</summary>
+        public GameObject ClimbVolume(string name, Vector3 center, Vector3 size, Vector3 facing, bool pole)
+        {
+            var go = new GameObject(name) { layer = Firehouse.Core.Layers.Trigger };
+            go.transform.SetParent(_root, false);
+            go.transform.SetPositionAndRotation(center, Quaternion.LookRotation(facing, Vector3.up));
+            var box = go.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = size;
+            go.AddComponent<Firehouse.Player.Ladder>().IsPole = pole;
+            return go;
         }
 
         public void AddMeshPart(string group, System.Action<MeshBuilder> build) => build(Group(group));
