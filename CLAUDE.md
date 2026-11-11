@@ -101,7 +101,7 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 | Build/Network Root | `Resources/NetworkRoot.prefab` |
 | Build/Firehouse Blockout Scene | `Scenes/Firehouse.unity` and sets it as build index 0 |
 | Art/Setup Firehouse Import | Import settings for `Assets/Art/Firehouse/Firehouse.fbx` (exported from `ArtSource/Firehouse.blend`): colliders, Mikk tangents, lightmap UVs; extracts URP Lit materials to `Art/Firehouse/Materials` with albedo + normal maps from `Art/Firehouse/Textures` |
-| Build/Firehouse Test Scene | Runs the import setup, then `Scenes/Firehouse_Test.unity`: the textured firehouse (static except doors, garage doors, spawn empties), warm sun with soft shadows, offline `SimpleFirstPersonController` at PlayerSpawn_01 |
+| Build/Firehouse Test Scene | Runs the import setup, then `Scenes/Firehouse_Test.unity`: the textured firehouse (static except doors, garage doors, spawn empties), warm sun with soft shadows, `World/Door` on every door (E opens: hinged doors swing away from you, garage doors tilt up; local-only, not networked yet), offline `SimpleFirstPersonController` at PlayerSpawn_01 |
 | Render Concept Art | Stages a hand-posed key-art shot in a scratch scene and writes `docs/concept-art.png` (used by README) |
 | Build/Art Test Scene | An unsaved scratch scene with shader test shapes |
 

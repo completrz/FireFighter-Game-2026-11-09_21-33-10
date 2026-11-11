@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Firehouse.Player;
+using Firehouse.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -189,6 +190,30 @@ namespace Firehouse.EditorTools
                 if (isDynamic) dynamicCount++; else staticCount++;
             }
 
+            // Doors: hinged doors swing away from the user, garage doors tilt up into the bay.
+            var houseBounds = new Bounds(house.transform.position, Vector3.zero);
+            foreach (var r in house.GetComponentsInChildren<Renderer>()) houseBounds.Encapsulate(r.bounds);
+            int doorCount = 0;
+            foreach (Transform t in house.GetComponentsInChildren<Transform>(true))
+            {
+                bool garage = t.name.StartsWith("GarageDoor_");
+                if (!garage && !t.name.StartsWith("Door_")) continue;
+                var door = t.GetComponent<Door>();
+                if (door == null) door = t.gameObject.AddComponent<Door>();
+                if (garage)
+                {
+                    var r = t.GetComponent<Renderer>();
+                    Vector3 inward = houseBounds.center - (r != null ? r.bounds.center : t.position);
+                    inward.y = 0f;
+                    // Snap to the door's normal so it tilts straight in.
+                    var size = r != null ? r.bounds.size : Vector3.one;
+                    inward = size.x >= size.z ? new Vector3(0f, 0f, Mathf.Sign(inward.z)) : new Vector3(Mathf.Sign(inward.x), 0f, 0f);
+                    door.Configure(Door.DoorKind.TiltUp, 88f, 2.2f, inward);
+                }
+                else door.Configure(Door.DoorKind.Hinged, 95f, 0.6f, Vector3.zero);
+                doorCount++;
+            }
+
             // Light: warm, soft shadows
             var light = Object.FindAnyObjectByType<Light>();
             if (light == null) light = new GameObject("Directional Light").AddComponent<Light>();
@@ -239,10 +264,9 @@ namespace Firehouse.EditorTools
             ProjectAssets.EnsureFolder("Assets/Scenes");
             EditorSceneManager.SaveScene(scene, ScenePath);
 
-            var bounds = new Bounds(house.transform.position, Vector3.zero);
-            foreach (var r in house.GetComponentsInChildren<Renderer>()) bounds.Encapsulate(r.bounds);
-            Debug.Log($"[Firehouse] Built {ScenePath}: {staticCount} static objects, {dynamicCount} doors/markers left dynamic. " +
-                      $"Firehouse bounds {bounds.size.x:F1} x {bounds.size.y:F1} x {bounds.size.z:F1} m. Player at {player.transform.position}.");
+            var b = houseBounds;
+            Debug.Log($"[Firehouse] Built {ScenePath}: {staticCount} static objects, {dynamicCount} doors/markers left dynamic, {doorCount} doors usable with E. " +
+                      $"Firehouse bounds {b.size.x:F1} x {b.size.y:F1} x {b.size.z:F1} m. Player at {player.transform.position}.");
         }
 
         private static bool IsNonStatic(Transform t)

@@ -1,5 +1,6 @@
 using Firehouse.Core;
 using Firehouse.UI;
+using Firehouse.World;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,7 +8,7 @@ namespace Firehouse.Player
 {
     /// <summary>
     /// Offline walk-around controller for art/level test scenes (e.g. Scenes/Firehouse_Test). Not networked and
-    /// not the gameplay Smokie: WASD + mouse, Shift sprint, Space jump, Esc frees the cursor, click re-locks.
+    /// not the gameplay Smokie: WASD + mouse, Shift sprint, Space jump, E use (doors), Esc frees the cursor, click re-locks.
     /// Hides the prototype session menu so the scene is playable without hosting.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
@@ -21,8 +22,10 @@ namespace Firehouse.Player
         [SerializeField] private float _mouseSensitivity = 0.1f;
         [SerializeField] private float _stickLookSpeed = 160f;
         [SerializeField] private bool _hideSessionMenu = true;
+        [SerializeField] private float _useRange = 2.5f;
 
         private CharacterController _cc;
+        private Door _focusDoor;
         private float _pitch;
         private float _verticalVelocity;
 
@@ -98,6 +101,25 @@ namespace Firehouse.Player
             Vector3 velocity = (transform.right * move.x + transform.forward * move.y) * speed;
             velocity.y = _verticalVelocity;
             _cc.Move(velocity * Time.deltaTime);
+
+            // Use (E / gamepad X): doors for now
+            _focusDoor = null;
+            if (!UIFocus.IsBlocked && _camera != null &&
+                Physics.Raycast(_camera.position, _camera.forward, out var hit, _useRange, ~0, QueryTriggerInteraction.Ignore))
+                _focusDoor = hit.collider.GetComponentInParent<Door>();
+            bool use = (kb != null && kb.eKey.wasPressedThisFrame) || (pad != null && pad.buttonWest.wasPressedThisFrame);
+            if (_focusDoor != null && use) _focusDoor.Toggle(transform.position);
+        }
+
+        private void OnGUI()
+        {
+            if (UIFocus.IsBlocked) return;
+            var c = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            GUI.Label(new Rect(c.x - 4, c.y - 10, 12, 20), "·");
+            if (_focusDoor == null) return;
+            string text = $"E: {(_focusDoor.IsOpen ? "Close door" : "Open door")}";
+            var size = GUI.skin.label.CalcSize(new GUIContent(text));
+            GUI.Label(new Rect(c.x - size.x * 0.5f, c.y + 36, size.x, size.y), text);
         }
     }
 }
