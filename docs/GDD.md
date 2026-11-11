@@ -25,7 +25,13 @@ A 1–8 player online co-op game where a scrappy volunteer fire crew drives a be
 
 ## Art direction and characters
 
-Low-poly and flat-shaded like Peak: bright readable colors, chunky shapes, vertex colors instead of detailed textures, so fire and smoke stay readable and Claude Code can build most assets procedurally or from simple models.
+**Stylized low-poly with tiling textures.** Chunky, simple shapes (low-poly, flat-shaded faces) dressed with a small library of tiling, hand-tuned surface materials: brick, plaster, concrete, asphalt, wood, painted metal, roof, grass, trim, glass. Each material is a tileable albedo plus normal map, and a vertex-color grime layer darkens corners, bases and edges, so a simple box still reads as a real worn building. The look is a warm, slightly toy-like real world: think a model railroad town, not a photoreal city.
+
+- **Environments and vehicles** use the shared surface library (one material per surface type, reused across every asset) instead of unique textures per object. Trucks are glossy red painted metal with chrome, trim and a lightbar.
+- **Characters, fire, smoke and water stay bold and simple.** Smokies, flames, smoke columns, water streams and anything the player must read in chaos use bright solid colors and emissive accents, so they pop against the textured world.
+- **Readability rules:** no high-frequency detail on gameplay surfaces, saturated hazard colors (fire orange, hose yellow, reflective stripes) are reserved for gameplay, and texture contrast stays low so smoke and fire are always the brightest things on screen.
+- **Lighting:** warm sun, soft shadows, baked light in the firehouse; missions at golden hour, dusk and night so fire is the main light source.
+- Assets are modeled in Blender (`ArtSource/`), exported to FBX, and set up in Unity by editor builders (URP Lit materials with albedo + normal maps).
 
 **The crew character ("Smokies")**
 
@@ -37,7 +43,7 @@ A firefighter built to be funny in physics and readable in smoke, distinct from 
 - **Air tank on the back:** visibly empties as the air meter drains, so teammates can see who needs to get out.
 - **Coat color and helmet number:** each player picks a coat color and gets a helmet number 1–8. Reflective stripes glow in smoke.
 - **Soot:** characters get blacker over a run. Getting hosed by a teammate washes it off, which gives friendly fire a use.
-- **Budget:** roughly 1,500–3,000 triangles per character, one material, eye expressions as swappable decals.
+- **Budget:** roughly 1,500–3,000 triangles per character, one simple solid-color material (coat color as a tint), eye expressions as swappable decals.
 
 ## The firehouse lobby
 
@@ -305,7 +311,7 @@ Use host-based peer-to-peer over Steam's relay network: no dedicated servers to 
 
 **Engine and stack: Unity**
 
-- **Unity 6 LTS** with URP, flat-shaded low-poly materials
+- **Unity 6 LTS** with URP; low-poly flat-shaded meshes with a shared library of tiling textured URP Lit materials
 - **Netcode for GameObjects** with a Steam transport, host-based peer-to-peer
 - **Facepunch.Steamworks** for lobbies, invites, Rich Presence, achievements and voice
 - **In-game proximity voice:** Steam voice captured per player and played through a 3D audio source on their character's head, so volume falls off with distance and walls muffle it. A radio upgrade lets you reach the whole crew.
@@ -353,7 +359,7 @@ Launch with all 10 levels, then add endless mode and new levels in free updates.
 
 **Open questions**
 
-**Decided:** up to 8 players · low-poly like Peak · friendly fire on · Unity · no classes · in-game proximity chat · soft gambling with in-game cash.
+**Decided:** up to 8 players · stylized low-poly with tiling textures · friendly fire on · Unity · no classes · in-game proximity chat · soft gambling with in-game cash.
 
 - [ ] Game title
 - [ ] Team size and who does art and sound

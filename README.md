@@ -1,8 +1,21 @@
 # Firehouse Co-op
 
-![Concept art: a Smokie crew fighting a suburban house fire at dusk](docs/concept-art.png)
+![Concept art: a Smokie crew fighting a suburban house fire at dusk](docs/concept/03_house_fire.png)
 
-*Concept render of the finished game: a Level 2 house fire. One Smokie hoses the downstairs window (and has just flattened a teammate), one climbs the ladder to the upstairs window, one carries a civilian out the front door, one runs in with an extinguisher, and the cat is still on the roof. Staged in Unity with the game's own models (`Tools/Firehouse/Render Concept Art`).*
+*Concept render of the finished game in the target art style (stylized low-poly with tiling textures): a Level 2 house fire at dusk. One Smokie hoses the upstairs window while a teammate backs them up, the stream has just flattened a third, one climbs the ladder, one carries a civilian out the front door, and the cat is still on the roof.*
+
+### Concept gallery
+
+| | |
+| --- | --- |
+| ![The whole world](docs/concept/01_world.png) | ![The firehouse](docs/concept/02_firehouse.png) |
+| **The world.** Suburbs, the firehouse on Main Street, downtown, the farm up the dirt road and the reactor on the hill, with three calls burning at once. | **The firehouse.** The hub between calls: trucks out on the apron, one Smokie washing the engine (and a teammate). |
+| ![Apartment fire](docs/concept/04_apartment_fire.png) | ![Brush fire](docs/concept/05_brush_fire.png) |
+| **City apartment block.** Ladder truck with the aerial up to a 4th-floor window, hose crews on the street. | **Brush fire.** The mini-pumper on the dirt road, a fire line in the wheat field and the barn going up. |
+| ![Fire trucks](docs/concept/06_fire_trucks.png) | ![Smokies](docs/concept/07_smokies.png) |
+| **The fleet.** Starter mini-pumper, standard engine and the tiller ladder truck. | **The Smokies.** Eight coat colors, helmet colors, lens expressions (happy, wide, squint, X'd out) and a glowing talk grille. |
+
+*Rendered in Blender from `ArtSource/ConceptArt.blend` (it appends the real firehouse from `ArtSource/Firehouse.blend`; everything else is built by the script library stored in the file's `cx_lib.py` text block).*
 
 **A 1–8 player online co-op firefighting game for Steam.** A scrappy volunteer fire crew drives a beat-up engine to fires, argues over who holds the hose, and gets paid just enough to buy a better truck. It's a friendslop game: cheap, chaotic, physics-driven, and funnier the worse you play.
 
@@ -202,7 +215,7 @@ Nothing is bought with real money, and the crew fund can only be gambled through
 
 | | |
 | --- | --- |
-| Engine | Unity 6, Universal Render Pipeline, low-poly flat-shaded vertex-color art with one shared material |
+| Engine | Unity 6, Universal Render Pipeline, stylized low-poly art: flat-shaded meshes with a shared library of tiling textured materials (albedo + normal + vertex grime); bold solid-color characters and effects |
 | Networking | Netcode for GameObjects, host-based peer-to-peer over the Steam relay. No dedicated servers. |
 | Steam | Facepunch.Steamworks: lobbies, invites, Rich Presence, achievements, Steam Cloud, proximity voice. Remote Play Together for free. |
 | Input | New Input System, keyboard/mouse and gamepad |

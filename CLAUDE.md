@@ -12,7 +12,7 @@ This is a low-poly, physics-driven online co-op firefighting game for Steam, for
 - Proximity voice chat is a core feature.
 - Mission info comes from a radio (physical speakers in the firehouse and truck cab), not a HUD.
 - Up to 8 players.
-- Art is low-poly and flat-shaded with vertex colors, using one shared material wherever possible.
+- Art is stylized low-poly: flat-shaded meshes dressed with the shared library of tiling textured surface materials (see Art below). Characters and effects stay bold solid colors. No unique per-object textures.
 - Gambling uses in-game cash only. No real money anywhere, and cosmetics are never sold.
 
 ## Tech stack
@@ -53,7 +53,7 @@ Assets/_Project/
   Resources/      NetworkRoot.prefab only (see "Startup" below)
   Scenes/         Firehouse (build index 0), later TestRoad, TestFire
   Art/
-    Materials/    the shared vertex-color material lives here
+    Materials/    the legacy shared vertex-color material (prototype assets)
     Shaders/
     Meshes/       generated/procedural meshes
   Audio/
@@ -76,7 +76,9 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 - **F1 debug panel:** main tuning values register with the debug panel (`Firehouse.Core.Tuning`) so they can be adjusted live in play.
 - Keep the simulation separate from presentation. Fire, water and truck logic go in plain C# classes where practical, so they can be unit-tested in EditMode tests. MonoBehaviours and NetworkBehaviours are thin wrappers.
 - Every repeatable setup (test scenes, prefabs, the Smokies model, the shared material) has an editor builder under the **`Tools/Firehouse/`** menu, so it can be rebuilt in one click. Generated assets can be regenerated, so don't hand-edit them.
-- Art: primitives, ProBuilder and procedural meshes, colored with vertex colors through the one shared material `Art/Materials/M_VertexColor`.
+- Art (current direction, see GDD "Art direction"): low-poly, flat-shaded meshes modeled in Blender (`ArtSource/*.blend`) and exported to FBX under `Assets/Art/<Asset>/`. Surfaces use the shared material library (one URP Lit material per surface type: brick, plaster, concrete, asphalt, wood, metal_red, roof, grass, trim, paint, glass), each a tiling albedo + normal map at 0.5 UV units per metre, multiplied by a vertex-color "Grime" layer in Blender. Unity import/material setup is done by an editor builder (see `FirehouseArtImporter`), never by hand.
+- Characters (Smokies), fire, smoke, water and UI-like gameplay cues stay bold solid colors / emissive so they read against the textured world.
+- Legacy: the prototype's procedural assets (Smokie, truck, props, blockouts) still use the vertex-color material `Art/Materials/M_VertexColor`. Move them to the new direction as they get real models.
 
 ## Startup and sessions
 
@@ -102,7 +104,7 @@ After you write or change scripts: refresh, wait for compilation (`mcpforunity:/
 | Build/Firehouse Blockout Scene | `Scenes/Firehouse.unity` and sets it as build index 0 |
 | Art/Setup Firehouse Import | Import settings for `Assets/Art/Firehouse/Firehouse.fbx` (exported from `ArtSource/Firehouse.blend`): colliders, Mikk tangents, lightmap UVs; extracts URP Lit materials to `Art/Firehouse/Materials` with albedo + normal maps from `Art/Firehouse/Textures` |
 | Build/Firehouse Test Scene | Runs the import setup, then `Scenes/Firehouse_Test.unity`: the textured firehouse (static except doors, garage doors, spawn empties), warm sun with soft shadows, `World/Door` on every door (E opens: hinged doors swing away from you, garage doors tilt up; local-only, not networked yet), offline `SimpleFirstPersonController` at PlayerSpawn_01 |
-| Render Concept Art | Stages a hand-posed key-art shot in a scratch scene and writes `docs/concept-art.png` (used by README) |
+| Render Concept Art | Legacy: stages the old vertex-color key-art shot and writes `docs/concept-art.png`. The README now uses the Blender concept renders in `docs/concept/` (from `ArtSource/ConceptArt.blend`) |
 | Build/Art Test Scene | An unsaved scratch scene with shader test shapes |
 
 Shader vertex colors: RGB is the albedo, and **alpha < 1 means emissive** (0 = full glow). `_GlowColor` (set by MaterialPropertyBlock) adds script-driven glow, and `_BaseColor` (set by MaterialPropertyBlock) tints, e.g. coat color.
